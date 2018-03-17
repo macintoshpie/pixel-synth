@@ -4,7 +4,16 @@
 
 </head>
 <body>
-	<input type="range" min="1" value="1" id="myRange">
+	<canvas id="myCanvas"></canvas>
+	<span></span>
+	<button id="rb">R</button>
+	<button id="gb">G</button>
+	<button id="bb">B</button>
+	<select id="waveSelect">
+		<option>saw</option>
+		<option>triangle</option>
+		<option>rand</option>
+	</select>
 	<script type="text/javascript" src="{{ url_for('static', filename='pixel_synth.js') }}"></script>
 	<script type="text/javascript" src="../static/pixel_synth.js"></script>
 </body>

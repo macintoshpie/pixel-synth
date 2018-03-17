@@ -42,12 +42,12 @@ var canvasX;
 var canvasY;
 var disp_width = 500;
 var disp_height = 500;
-var data_width = 26;
-var data_height = 26;
+var data_width = 25;
+var data_height = 25;
 var ctx;
 var imgData;
 var displayImage;
-var display_scale = 15;
+var display_scale = 20;
 var display_unit = new Array(display_scale*4);
 display_unit = [255, 0, 0, 255, 255, 0, 0, 255];
 red_pixel = [255, 0, 0, 255]
@@ -92,6 +92,7 @@ var twoD = [[.1, .5, .1], [.5, 1, .5], [.1, .5, .1]]
 function Wave(wave_list, frequency) {
 	this.wave_list = wave_list;
 	this.frequency = frequency;
+	this.wave_function = triangle
 
 	this.step = function(mod) {
 		//FIXME: THIS IS BAD. a better solution is to somehow figure out the new value using getVal
@@ -128,8 +129,9 @@ function Channel(color_str, wave) {
 }
 
 function initialize() {
-	myCanvas = document.createElement("canvas");
-	document.body.appendChild(myCanvas);
+	// myCanvas = document.createElement("canvas");
+	// document.body.appendChild(myCanvas);
+	myCanvas = document.getElementById("myCanvas")
 	myCanvas.width = disp_width;
 	myCanvas.height = disp_height;
 	ctx = myCanvas.getContext("2d");
@@ -160,38 +162,32 @@ function initialize() {
 	//ctx.putImageData(imgData2, 0, 0);
 	ctx.putImageData(displayImage, 0, 0);
 
-	//Add input box and button
-	myInput = document.createElement("input");
-	document.body.appendChild(myInput);
+	//Add inputs
+	waveSelect = document.getElementById("waveSelect")
+	waveSelect.addEventListener('change', function() {
+		current_chn.wave.wave_function = eval(waveSelect.value)
+		l = current_chn.wave.wave_list.length
+		current_chn.wave.wave_list = current_chn.wave.wave_function(l)
+	})
 
-	myBtn = document.createElement("button");
-	document.body.appendChild(myBtn);
+	rb = document.getElementById("rb")
+	rb.addEventListener('click', function(e) {
+		current_chn = red_chn
+		waveSelect.value = red_chn.wave.wave_function.name
+	})
 
-	myBtn.onclick = function() {
-		color_data = myInput.value.split(",");
-		newList = color_data.map(colorMap)
-		myInput.value = newList
-		red_list = newList;
-	};
+	gb = document.getElementById("gb")
+	gb.addEventListener('click', function(e) {
+		current_chn = grn_chn
+		waveSelect.value = grn_chn.wave.wave_function.name
+	})
 
-	//Add input box and button
-	modInput = document.createElement("input");
-	document.body.appendChild(modInput);
+	bb = document.getElementById("bb")
+	bb.addEventListener('click', function(e) {
+		current_chn = blu_chn
+		waveSelect.value = blu_chn.wave.wave_function.name
+	})
 
-	modBtn = document.createElement("button");
-	document.body.appendChild(modBtn);
-
-	modBtn.onclick = function() {
-		mod_data = modInput.value.split(",");
-		newMod = mod_data.map(colorMap)
-		modInput.value = newMod
-		red_mod = newMod;
-	};
-
-	myRange = document.getElementById("myRange");
-	myRange.oninput = function() {
-		red_freq = this.value;
-	}
 
 
 	document.addEventListener('keydown', function(event) {
@@ -223,7 +219,7 @@ function initialize() {
 
 		waveLen = Math.floor(max_list_len * wavePct)
 		if (waveLen != current_chn.wave.wave_list.length) {
-			current_chn.wave = new Wave(saw(waveLen))
+			current_chn.wave.wave_list = current_chn.wave.wave_function(waveLen)
 		}
 
 		freqVal = Math.floor(freqPct * waveLen)
@@ -244,7 +240,7 @@ function initialize() {
 
 			waveLen = Math.floor(max_list_len * wavePct)
 			if (waveLen != current_chn.wave.wave_list.length) {
-				current_chn.wave = new Wave(saw(waveLen))
+				current_chn.wave.wave_list = current_chn.wave.wave_function(waveLen)
 			}
 
 			freqVal = Math.floor(freqPct * waveLen)
@@ -420,7 +416,7 @@ function triangle(length) {
 
 }
 
-function randomList(length) {
+function rand(length) {
 	r = [];
 	for (var q=0; q<length; q++) {
 		r.push(Math.random());
