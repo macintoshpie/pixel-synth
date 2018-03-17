@@ -214,6 +214,7 @@ function initialize() {
 	myCanvas.onmousedown = function(e) {
 		mouseIsDown = true;
 	}
+
 	myCanvas.addEventListener('touchmove', function(e) {
 		var touch = event.touches[0]
 		wavePct = posToPercent(touch.clientX - canvasX)
@@ -228,7 +229,8 @@ function initialize() {
 		if (freqVal != current_chn.wave.frequency) {
 			current_chn.wave.frequency = freqVal
 		}
-	}
+	})
+
 	myCanvas.onmouseup = function(e) {
 		mouseIsDown = false;
 	}
