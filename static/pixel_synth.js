@@ -214,6 +214,21 @@ function initialize() {
 	myCanvas.onmousedown = function(e) {
 		mouseIsDown = true;
 	}
+	myCanvas.addEventListener('touchmove', function(e) {
+		var touch = event.touches[0]
+		wavePct = posToPercent(touch.clientX - canvasX)
+		freqPct = posToPercent(touch.clientY - canvasY)
+
+		waveLen = Math.floor(max_list_len * wavePct)
+		if (waveLen != current_chn.wave.wave_list.length) {
+			current_chn.wave = new Wave(saw(waveLen))
+		}
+
+		freqVal = Math.floor(freqPct * waveLen)
+		if (freqVal != current_chn.wave.frequency) {
+			current_chn.wave.frequency = freqVal
+		}
+	}
 	myCanvas.onmouseup = function(e) {
 		mouseIsDown = false;
 	}
