@@ -217,7 +217,6 @@ function initialize() {
 
 	myCanvas.addEventListener('touchmove', function(e) {
 		event.preventDefault();
-		alert("TOUCHMOVE");
 		var touch = event.touches[0]
 		wavePct = posToPercent(touch.clientX - canvasX)
 		freqPct = posToPercent(touch.clientY - canvasY)
