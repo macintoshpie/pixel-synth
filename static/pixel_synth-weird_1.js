@@ -80,9 +80,9 @@ var editingMod = false; // indicates when user is updating mod value rather than
 
 var MAX_RGB_VAL = 255;
 
-var red_chn = new Channel("red", new Wave(triangle(294), 293), 1)
-var grn_chn = new Channel("green", new Wave(triangle(200), 10), 1)
-var blu_chn = new Channel("blue", new Wave(saw(30), 1), 0)
+var red_chn = new Channel("red", new Wave(saw(10), 1))
+var grn_chn = new Channel("green", new Wave(triangle(24), 1))
+var blu_chn = new Channel("blue", new Wave(saw(30), 1))
 var current_chn = red_chn;
 
 /// Cool stuff
@@ -91,8 +91,6 @@ var current_chn = red_chn;
 var weave = [0.75, 0, 0.75, 0, 0, 0, 0.75, 0, 0.75, 0]
 var lightning = [0.09823295104804686, 0.01498873108676757, 0.1606971882062982, 0.7991849387392078, 0.7755476116559195, 0.6999722361959793, 0.014976423578878073]
 var twoD = [[.1, .5, .1], [.5, 1, .5], [.1, .5, .1]]
-var manTimes = 100
-var man = 0
 
 function Wave(wave_list, frequency) {
 	this.wave_list = wave_list;
@@ -114,24 +112,22 @@ function Wave(wave_list, frequency) {
 	this.getVal = function(index, as_final) {
 		// i = (this.current_idx + index)%this.wave_list.length //TESTING
 		if (as_final) {
-			j = (this.current_idx + index)%this.wave_list.length
-			return this.wave_list[j];
+			i = (this.current_idx + index)%this.wave_list.length
+			return this.wave_list[i];
 		} else {
-			// the variable being named "j" was what was causing those crazy effects (was called i)
-			j = myMod((this.current_idx + index), this.wave_list.length)
-			if (i<0) console.log(j)
-			return this.wave_list[j];
+			i = (this.current_idx + index)%this.wave_list.length
+			return this.wave_list[i];
 		}
 		
 	}
 }
 
-function Channel(color_str, wave, weight) {
+function Channel(color_str, wave) {
 	this.color = color_str;
 	this.wave = wave;
-	this.weight = weight;
+	this.weight = 1;
 	this.mod = new Wave(saw(10), 1);
-	this.mod_amt = 0; // Determines the magnitude of the modulation on the wave
+	this.mod_amt = 3; // Determines the magnitude of the modulation on the wave
 	// Mod Destinations:
 	// - Frequency of wave
 	// - phase of wave
@@ -141,10 +137,7 @@ function Channel(color_str, wave, weight) {
 		i = index;
 		if (as_final) { //this will apply weighting and other filters
 			m = Math.floor(negPosInt(this.mod.getVal(i)) * this.mod_amt); // this is used to mod the phase
-			//if (m!=0) console.log(m)
-			//m = 0//(Math.abs(m) == 0) ? 0 : m;
-			//console.log(m + i)
-			w = this.wave.getVal(i + m, true)
+			w = this.wave.getVal(i + m)
 			return w * this.weight; //*m;
 		} else {
 			return this.wave.getVal(i); //raw wave
@@ -271,9 +264,14 @@ function initialize() {
 		freqPct = posToPercent(touch.clientY - canvasY)
 
 		waveLen = Math.floor(max_list_len * wavePct)
-		freqVal = Math.floor(freqPct * waveLen)
+		if (waveLen != current_chn.wave.wave_list.length) {
+			current_chn.wave.wave_list = current_chn.wave.wave_function(waveLen)
+		}
 
-		updateCurrentWave(waveLen, freqVal)
+		freqVal = Math.floor(freqPct * waveLen)
+		if (freqVal != current_chn.wave.frequency) {
+			current_chn.wave.frequency = freqVal
+		}
 	}, false)
 
 	myCanvas.onmouseup = function(e) {
@@ -292,10 +290,6 @@ function initialize() {
 			updateCurrentWave(waveLen, freqVal)
 		}
 	}
-}
-
-function myMod(n, m) {
-	return ((n % m) + m) % m;
 }
 
 function posToPercent(position) {
