@@ -36,20 +36,43 @@ can lock an attribute down, so that clicking and dragging on screen only affects
 
 // Draw your own 2d filter??? that may be nice.
 
+//sum notes
+var aScale = [
+277.2,	554.4,	1109,	2217,
+311.1,	622.3,	1245,	2489,
+349.2,	698.5,	1397,	2794,
+392,	784,	1568,	3136,
+493.9,	987.8,	1976,	3951,
+]
+function crappy(ar, r, c) {
+	yy = []
+	for (i=0; i<c; i++) {
+		for (j=0; j<r; j++) {
+			console.log(i+(c*j))
+			yy.push(ar[i+(c*j)])
+		}
+	}
+	return yy;
+}
+aScale = crappy(aScale, 5, 4)
 
+//create a synth and connect it to the master output (your speakers)
+var red_syn = new Tone.Oscillator(440, "square12").toMaster().start();
+var grn_syn = new Tone.Oscillator(440, "sine12").toMaster().start();
+var blu_syn = new Tone.Oscillator(440, "triangle12").toMaster().start();
 ///////
 // VARS
 var myCanvas;
 var canvasX;
 var canvasY;
-var disp_width = 500;
-var disp_height = 500;
-var data_width = 25;
-var data_height = 25;
+var disp_width = 400;
+var disp_height = 400;
+var data_width = 40;
+var data_height = 40;
 var ctx;
 var imgData;
 var displayImage;
-var display_scale = 20;
+var display_scale = 10;
 var display_unit = new Array(display_scale*4);
 display_unit = [255, 0, 0, 255, 255, 0, 0, 255];
 red_pixel = [255, 0, 0, 255]
@@ -58,7 +81,8 @@ var green_freq = 1
 var blue_freq = 1
 var mod_freq = 1
 
-var max_list_len = 300;
+var max_list_len = 400;
+var MAX_RECURSION = 3;
 
 var red_list = saw(20);
 var green_list = triangle(36);
@@ -79,6 +103,7 @@ var mouseIsDown = false;
 var editingMod = false; // indicates when user is updating mod value rather than a main channel
 
 var MAX_RGB_VAL = 255;
+var KNOB_THICKNESS = "1"
 
 var red_chn = new Channel("red", new Wave(triangle(294), 293), 1)
 var grn_chn = new Channel("green", new Wave(triangle(200), 10), 1)
@@ -106,22 +131,18 @@ function Wave(wave_list, frequency) {
 		//f = this.frequency + Math.floor(negPosInt(mod) * 3) //will need to replace constant with a variable "magnitude"
 		//t = this.wave_list.splice(0, f)
 		//this.wave_list = this.wave_list.concat(t);
-		m = Math.floor(negPosInt(mod) * mod_amt) // will need to replace constant with a variable for magnitude of effect
-		this.current_idx = (this.current_idx + this.frequency + m)%this.wave_list.length
+		m = Math.floor(negPosInt(mod) * mod_amt)
+		//ADD m BELOW TO MODIPHY FREQUENCY WITH THE MOD PARAMETER
+		this.current_idx = (this.current_idx + this.frequency + m)%this.wave_list.length // THIS IS WHAT MODIFIES PHASE!!
 		if (isNaN(this.current_idx)) throw "Parameter is not a number!";
 	}
 
-	this.getVal = function(index, as_final) {
+	this.getVal = function(index) {
 		// i = (this.current_idx + index)%this.wave_list.length //TESTING
-		if (as_final) {
+
 			j = (this.current_idx + index)%this.wave_list.length
 			return this.wave_list[j];
-		} else {
 			// the variable being named "j" was what was causing those crazy effects (was called i)
-			j = myMod((this.current_idx + index), this.wave_list.length)
-			if (i<0) console.log(j)
-			return this.wave_list[j];
-		}
 		
 	}
 }
@@ -131,28 +152,42 @@ function Channel(color_str, wave, weight) {
 	this.wave = wave;
 	this.weight = weight;
 	this.mod = new Wave(saw(10), 1);
-	this.mod_amt = 0; // Determines the magnitude of the modulation on the wave
+	this.phase_mod_amt = 0; // Determines the magnitude of the modulation on the wave
+	this.freq_mod_amt = 0;
 	// Mod Destinations:
 	// - Frequency of wave
 	// - phase of wave
 	
 
-	this.getVal = function(index, as_final) {
+	this.getVal = function(index, with_weight, recursion_depth) {
 		i = index;
-		if (as_final) { //this will apply weighting and other filters
-			m = Math.floor(negPosInt(this.mod.getVal(i)) * this.mod_amt); // this is used to mod the phase
+		//DO SOMETHING WITH RECURSION DEPTH
+		if (recursion_depth > 1) {
+			//console.log("init r: ", recursion_depth)
+		}
+		
+		if (recursion_depth > MAX_RECURSION) {
+			m = 0; // NOT applying any mod since we've recursed to the max
+		}
+		else {
+			rd = recursion_depth + 1
+			m = Math.floor(negPosInt(this.mod.getVal(i, false, rd)) * this.phase_mod_amt); // this is used to mod the phase
+		}
+		w = this.wave.getVal(i + m, false)
+		if (with_weight) { //this will apply weighting and other filters
 			//if (m!=0) console.log(m)
 			//m = 0//(Math.abs(m) == 0) ? 0 : m;
 			//console.log(m + i)
-			w = this.wave.getVal(i + m, true)
+			
 			return w * this.weight; //*m;
 		} else {
-			return this.wave.getVal(i); //raw wave
+			return w;
 		}
+
 	}
 
 	this.stepAll = function(index) {
-		this.wave.step(this.mod.getVal(index, false), this.mod_amt);
+		this.wave.step(this.mod.getVal(index, false, 0), this.freq_mod_amt);
 		if (this.mod instanceof Wave) {
 			this.mod.step(0.5, 0); // currently not modding mods... (.5 means no mod b/c halfway between 0 and 1)
 		}
@@ -292,6 +327,55 @@ function initialize() {
 			updateCurrentWave(waveLen, freqVal)
 		}
 	}
+
+	//KNOB INPUTS
+
+	// WAVE LENGTH
+	$(function() {
+        $("#dial-wave").knob({
+        	'step': '.2',
+        	'thickness': KNOB_THICKNESS,
+        	'change': function(v) {updateCurrentWave(Math.floor(v/100*max_list_len))}
+    	});
+    });
+
+	// FREQUENCY
+    $(function() {
+        $("#dial-frequency").knob({
+        	'thickness': KNOB_THICKNESS,
+        	'change': function(v) {
+        		if (editingMod) {
+        			if (current_chn.mod instanceof Wave) {
+	        			wl = current_chn.mod.wave_list.length
+	        		} else {
+	        			wl = current_chn.mod.wave.wave_list.length
+	        		}
+        		} else {
+        			wl = current_chn.wave.wave_list.length
+        		}
+        		
+        		freqVal = Math.floor(v/100*wl)
+        		updateCurrentWave(null, freqVal)
+        	}
+    	});
+    });
+
+    // MOD AMT
+    $(function() {
+        $("#dial-mod-phase").knob({
+        	'thickness': KNOB_THICKNESS,
+        	'change': function(v) {current_chn.phase_mod_amt=v}
+    	});
+    });
+
+    // CHANNEL WEIGHT
+    $(function() {
+        $("#dial-weight").knob({
+        	'thickness': KNOB_THICKNESS,
+        	'change': function(v) {current_chn.weight=v/100}
+    	});
+    });
+
 }
 
 function myMod(n, m) {
@@ -323,11 +407,12 @@ function updateCurrentWave(waveLen, freqVal) {
 			w = current_chn.mod.wave
 		}
 	}
-	if (waveLen != w.wave_list.length) {
+	if (waveLen && waveLen != w.wave_list.length) {
 		w.wave_list = w.wave_function(waveLen)
 	}
 
-	if (freqVal != w.frequency) {
+	//FIXME: decide what to do with freq (don't always wanna pass it maybe)
+	if (freqVal && freqVal != w.frequency) {
 		w.frequency = freqVal
 	}
 }
@@ -358,17 +443,16 @@ function flattenArray(an_array) {
 function updateImage() {
 	for (var i=0; i<data_width*data_height; i++) {//*red_list.length) {	//jump at intervals as long as the my_list array
 		//console.log(i)
-
-		//TODO: incorporate feedback into mod
+		
 
 		basic_unit = [
 			// red_list[i%red_list.length] * red_mod[i%red_mod.length] * red_weight * 255,
 			// green_list[i%green_list.length] * green_mod[(i+ 2)%green_mod.length] * green_weight * 255,
 			// blue_list[i%blue_list.length] * blue_mod[(i+ 1)%blue_mod.length] * blue_weight * 255,
 			// 255
-			red_chn.getVal(i, true) * MAX_RGB_VAL,
-			grn_chn.getVal(i, true) * MAX_RGB_VAL,
-			blu_chn.getVal(i, true) * MAX_RGB_VAL,
+			red_chn.getVal(i, true, 0) * MAX_RGB_VAL,
+			grn_chn.getVal(i, true, 0) * MAX_RGB_VAL,
+			blu_chn.getVal(i, true, 0) * MAX_RGB_VAL,
 			MAX_RGB_VAL
 		]
 		var disp_arr = []
@@ -397,6 +481,21 @@ function updateImage() {
 		//imgData2.data[imgData2.data.length-img_idx+1] = green_list[i%green_list.length] * green_weight
 		// imgData.data[img_idx+2] = blue_list[i%blue_list.length] * blue_weight
 	}
+
+	yuh = red_chn.getVal(i, true, 0)
+	ggg = yuh ? Math.floor(yuh * aScale.length) : 0
+	red_syn.frequency.value = aScale[ggg];
+	red_syn.volume.value = red_chn.weight * 100 - 100
+
+	asd = grn_chn.getVal(i, true, 0)
+	fff = asd ? Math.floor(asd * aScale.length) : 0
+	grn_syn.frequency.value = aScale[fff];
+	grn_syn.volume.value = grn_chn.weight * 100 - 100
+
+	jkl = blu_chn.getVal(i, true, 0)
+	hhh = jkl ? Math.floor(jkl * aScale.length) : 0
+	blu_syn.frequency.value = aScale[hhh];
+	blu_syn.volume.value = blu_chn.weight * 100 - 100
 
 	//TODO: these shifts should be determined by the list length
 	// specifically, what would be the next value after writing the last (bottom right) pixel?

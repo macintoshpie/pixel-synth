@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
+	<script type="text/javascript" src="../static/bower_components/jquery/dist/jquery.min.js"></script>
 
+	<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery-knob/dist/jquery.knob.min.js') }}"></script>
+	<script type="text/javascript" src="../static/bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
+
+	<script type="text/javascript" src="{{ url_for('static', filename='Tone.min.js') }}"></script>
+	<script type="text/javascript" src="../static/Tone.min.js"></script>
 </head>
 <body>
 	<canvas id="myCanvas"></canvas>
@@ -15,7 +22,16 @@
 		<option>triangle</option>
 		<option>rand</option>
 	</select>
+
+	<input type="text" value="75" class="dial" id="dial-wave">
+	<input type="text" value="75" class="dial" id="dial-frequency">
+	<input type="text" value="75" class="dial" id="dial-mod-phase">
+	<input type="text" value="75" class="dial" id="dial-weight">
+
 	<script type="text/javascript" src="{{ url_for('static', filename='pixel_synth.js') }}"></script>
 	<script type="text/javascript" src="../static/pixel_synth.js"></script>
+
+	
+	
 </body>
 </html>
