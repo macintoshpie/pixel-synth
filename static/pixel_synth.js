@@ -251,6 +251,7 @@ function initialize() {
 		editingMod = false;
 		current_chn = red_chn
 		waveSelect.value = red_chn.wave.wave_function.name
+		updateKnobs();
 	})
 
 	gb = document.getElementById("gb")
@@ -258,6 +259,7 @@ function initialize() {
 		editingMod = false;
 		current_chn = grn_chn
 		waveSelect.value = grn_chn.wave.wave_function.name
+		updateKnobs();
 	})
 
 	bb = document.getElementById("bb")
@@ -265,6 +267,7 @@ function initialize() {
 		editingMod = false;
 		current_chn = blu_chn
 		waveSelect.value = blu_chn.wave.wave_function.name
+		updateKnobs();
 	})
 
 	mbtn = document.getElementById("mod")
@@ -275,6 +278,7 @@ function initialize() {
 		} else {
 			waveSelect.value = current_chn.mod.wave.wave_function.name
 		}
+		updateKnobs();
 		
 	})
 
@@ -376,6 +380,24 @@ function initialize() {
     	});
     });
 
+}
+
+function updateKnobs() {
+	if (editingMod) {
+		if (current_chn.mod instanceof Wave) {
+			wav = current_chn.mod
+		} else {
+			wav = current_chn.mod.wave
+		}
+		
+	} else  {
+		wav = current_chn.wave
+	}
+	$("#dial-wave").val(wav.wave_list.length * 100 / max_list_len).trigger('change')
+	$("#dial-frequency").val(wav.frequency * 100 / wav.wave_list.length).trigger('change')
+
+	$("#dial-mod-phase").val(current_chn.phase_mod_amt).trigger('change')
+	$("#dial-weight").val(current_chn.weight * 100).trigger('change')
 }
 
 function myMod(n, m) {
@@ -575,6 +597,14 @@ function triangle(length) {
 
 	return temp_array
 
+}
+
+function square(length) {
+	var temp_array = new Array(length)
+	for (var sq=0; sq<length; sq++) {
+		temp_array[sq] = sq<length/2 ? 1 : 0;
+	}
+	return temp_array;
 }
 
 function rand(length) {
