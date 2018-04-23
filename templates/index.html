@@ -7,7 +7,7 @@
 	<script type="text/javascript" src="../static/bower_components/jquery/dist/jquery.min.js"></script>
 
 	<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery-knob/dist/jquery.knob.min.js') }}"></script>
-	<script type="text/javascript" src="../static/bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
+	<script type="text/javascript" src="../static/bower_components/jquery-knob/js/jquery.knob.js"></script>
 
 	<script type="text/javascript" src="{{ url_for('static', filename='Tone.min.js') }}"></script>
 	<script type="text/javascript" src="../static/Tone.min.js"></script>
@@ -17,6 +17,14 @@
 
 
 	<style>
+	.vertical-align {
+    display: flex;
+    align-items: center;
+}
+		.dial-row {
+			border: 3px solid black;
+			padding: 4px;
+		}
 
 		.btn:focus, .btn:active:focus, .btn.active:focus{
 			outline:none;
@@ -39,9 +47,9 @@
 			background-color: #8b8b8b;
 		}
 
-		input {
+		/*input {
 			visibility:hidden;
-		}
+		}*/
 
 		.knob-container * {
 			float: none;
@@ -70,66 +78,47 @@
 
 			</div>
 			<div class="col-md-6 col-sm-12">
-				<div class="row">
-					<div class="col-6">
-						<div class="row">
-							<div class="col-12">
-								<p>
-									length
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-md-10 col-md-offset-1 knob-container">
-								<input type="text" value="75" class="dial" id="dial-wave">
-							</div>
-						</div>
+				<div class="row dial-row">
+					<div class="col-6" id="dial-select-container">
+						<input type="text" class="dial" id="dial-select">
+						select edit
 					</div>
-					<div class="col-6">
-						<div class="row">
-							<div class="col-12">
-								<p>
-									frequency
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-md-10 col-md-offset-1 knob-container">
-								<input type="text" value="75" class="dial" id="dial-frequency">
-							</div>
-						</div>
+					<div class="col-6" id="">	
+						<input type="text" class="dial" id="dial-shape">
+						shape
 					</div>
 				</div>
-				<div class="row">
+				<div class="row dial-row">
+					<div class="col-6">
+						<input type="text" class="dial" id="dial-wave">
+						length
+					</div>
+					<div class="col-6">
+						<input type="text" class="dial" id="dial-frequency">
+						frequency
+					</div>
+				</div>
+				<div class="row chn-only-container dial-row">
 					<div class="col-6" id="dial-mp-container">
-						<div class="row">
-							<div class="col-12">
-								<p>
-									mod amt
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-md-10 col-md-offset-1 knob-container">
-								<input type="text" value="75" class="dial" id="dial-mod-phase">
-							</div>
-						</div>
+						<input type="text" class="dial" id="dial-mod-phase">
+						mod amt
 					</div>
 					<div class="col-6" id="dial-weight-container">
-						<div class="row">
-							<div class="col-12">
-								<p>
-									weight
-								</p>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-md-10 col-md-offset-1 knob-container">
-								<input type="text" value="75" class="dial" id="dial-weight">
-							</div>
-						</div>
+						<input type="text" class="dial" id="dial-weight">
+						weight
 					</div>
 				</div>
+				<div class="row chn-only-container dial-row">
+					<div class="col-6" id="">
+						<input type="text" class="dial" id="dial-md-src">
+						mod src
+					</div>
+					<div class="col-6" id="">
+						<input type="text" class="dial" id="dial-md-dest">
+						mod dest
+					</div>
+				</div>
+				<!--
 				<div class="row">
 					<div class="col-6">
 						Wave Shape
@@ -184,6 +173,7 @@
 						</div>
 					</div>
 				</div>
+			-->
 			</div>
 		</div>
 	</div>

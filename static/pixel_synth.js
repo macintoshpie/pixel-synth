@@ -81,8 +81,8 @@ var canvasX;
 var canvasY;
 var disp_width = 400;
 var disp_height = 400;
-var data_width = 40;
-var data_height = 40;
+var data_width = 60;
+var data_height = 60;
 var ctx;
 var imgData;
 var displayImage;
@@ -112,7 +112,9 @@ var blue_weight = 0
 var mouseIsDown = false;
 
 var MAX_RGB_VAL = 255;
-var KNOB_THICKNESS = "1"
+var KNOB_THICKNESS = 1;
+var KNOB_CHOICE_THICKNESS = .5;
+var KNOB_PADDING = 8;
 var KNOB_WIDTH = 140
 var KNOB_HEIGHT = KNOB_WIDTH
 
@@ -125,6 +127,11 @@ var blu_chn = new Channel("blue", new Wave("blue", saw(30), 1), 0)
 
 var current_chn = red_chn;
 var modSrcSelect;
+
+
+var chn_list = [red_chn, grn_chn, blu_chn, mod_1, mod_2];
+var wave_funcs = [saw, triangle, square, rand];
+var mod_dests = ["phase", "frequency", "weight"];
 
 var wave_name_map = {
 	'red': {
@@ -158,9 +165,125 @@ var twoD = [[.1, .5, .1], [.5, 1, .5], [.1, .5, .1]]
 var manTimes = 100
 var man = 0
 
-window.onload = initialize;
+var updateCurrentChannel = function(chnIdxPct) {
+	select_idx = Math.floor(chnIdxPct * chn_list.length);
+	current_chn = chn_list[select_idx];
+	updateKnobs();
+}
 
+var updateCurrentShape = function(waveIdxPct) {
+	wave_func_idx = Math.floor(waveIdxPct * wave_funcs.length);
+	new_wave_func = wave_funcs[wave_func_idx];
+	if (current_chn instanceof Wave) {
+		w = current_chn
+	} else {
+		w = current_chn.wave
+	}
+	if (w.wave_function != new_wave_func) {
+		w.wave_function = new_wave_func;
+		l = w.wave_list.length;
+		w.wave_list = w.wave_function(l);
+	}
+}
 
+var updateCurrentLength = function(lenPct) {
+	if (current_chn instanceof Wave) {
+		w = current_chn
+	} else {
+		w = current_chn.wave
+	}
+	newLen = Math.floor(lenPct * max_list_len);
+	orig_freq_pct = w.frequency / w.wave_list.length;
+	if (newLen != w.wave_list.length) {
+		w.wave_list = w.wave_function(newLen)
+	}
+	updateCurrentFrequency(orig_freq_pct)
+}
+
+var updateCurrentFrequency = function(freqPct) {
+	if (current_chn instanceof Wave) {
+		w = current_chn
+		wl = w.wave_list.length
+	} else {
+		w = current_chn.wave
+		wl = w.wave_list.length
+	}
+	newFreq = Math.round(freqPct*wl);
+	if (newFreq != w.frequency) {
+		w.frequency = newFreq;
+	}
+}
+
+var updateCurrentModAmt = function(amtPct) {
+	//TODO: replace 100 with variable so that each mod type is different??
+	current_chn.phase_mod_amt = amtPct*100
+}
+
+var updateCurrentWeight = function(weightPct) {
+	current_chn.weight = weightPct;
+}
+
+var updateCurrentModSrc = function(chnIdxPct) {
+	src_idx = Math.floor(chnIdxPct * chn_list.length);
+	if (current_chn instanceof Wave) {
+		return;
+	}
+	if (current_chn.mod != chn_list[src_idx]) {
+		current_chn.mod = chn_list[src_idx];
+	}
+}
+
+var updateCurrentModDest = function(destIdxPct) {
+	dest_idx = Math.floor(destIdxPct * mod_dests.length);
+	if (current_chn instanceof Wave) {
+		return;
+	}
+	if (current_chn.mod_dest != mod_dests[dest_idx]) {
+		current_chn.mod_dest = mod_dests[dest_idx];
+	}
+}
+
+// trackers for click/drag input
+var x_function = updateCurrentLength
+var y_function = updateCurrentFrequency
+var prev_x_pos = 0;
+var prev_y_pos = 0;
+var shift_x = false;
+var shift_y = false;
+
+var mouseInputFunc = function(e) {
+	if (mouseIsDown) {
+		//NOTE: may want to use the change in position rather than
+		// absolute position in the future...
+		x_pct = posToPercent(e.clientX - canvasX);
+		y_pct = posToPercent(e.clientY - canvasY);
+
+		if (shift_x & e.shiftKey) {
+			x_function(x_pct)
+		}
+		else if (shift_y & e.shiftKey) {
+			y_function(y_pct)
+		}
+		else if (e.shiftKey) {
+			// first movement with shift down
+			if (e.screenX - prev_x_pos > e.screenY - prev_y_pos) {
+				shift_x = true;
+			} else {
+				shift_y = true;
+			}
+		} else {
+			shift_x = false;
+			shift_y = false;
+			x_function(x_pct);
+			y_function(y_pct);
+		}
+
+		updateKnobs();
+	}
+	prev_x_pos = e.screenX;
+	prev_y_pos = e.screenY;
+
+}
 
 function Wave(label, wave_list, frequency) {
 	this.label = label;
@@ -261,14 +384,13 @@ function Channel(color_str, wave, weight) {
 	}
 }
 
-function initialize() {
-	// myCanvas = document.createElement("canvas");
-	// document.body.appendChild(myCanvas);
-
-
+var initialize = function() {
 	myCanvas = document.getElementById("myCanvas")
 	disp_width = $("#myCanvas").parent().width()
 	disp_height = disp_width
+	window_height = $(window).height();
+	KNOB_WIDTH = Math.floor(window_height / 4) - 4 * KNOB_PADDING;
+	KNOB_HEIGHT = KNOB_WIDTH;
 
 	myCanvas.width = disp_width;
 	myCanvas.height = disp_height;
@@ -301,6 +423,7 @@ function initialize() {
 	//ctx.putImageData(imgData2, 0, 0);
 	ctx.putImageData(displayImage, 0, 0);
 
+	/*
 	//Add inputs
 	waveSelect = document.getElementById("waveSelect")
 	waveSelect.addEventListener('change', function() {
@@ -368,20 +491,30 @@ function initialize() {
 		waveSelect.value = mod_2.wave_function.name
 		updateKnobs();
 	})
+*/
 
 	document.addEventListener('keydown', function(event) {
 		draw()
 		if (event.code == 'KeyR') {
-			// edit red
 			current_chn = red_chn
+			updateKnobs();
 		}
 		else if (event.code == 'KeyG') {
 			current_chn = grn_chn
+			updateKnobs();
 		}
 		else if (event.code == 'KeyB') {
 			current_chn = blu_chn
+			updateKnobs();
 		}
 	});
+
+	document.addEventListener('keyup', function(event) {
+		if (event.key == "Shift") {
+			shift_x = false;
+			shift_y = false;
+		}
+	})
 
 	//Setup mouse input
 	canvasX = myCanvas.getBoundingClientRect().left
@@ -406,78 +539,165 @@ function initialize() {
 		mouseIsDown = false;
 	}
 	myCanvas.onmousemove = function(e) {
-		if (mouseIsDown) {
-			//NOTE: may want to use the change in position rather than
-			// absolute position in the future...
-			wavePct = posToPercent(e.clientX - canvasX)
-			freqPct = posToPercent(e.clientY - canvasY)
-
-			waveLen = Math.floor(max_list_len * wavePct)
-			freqVal = Math.floor(freqPct * waveLen)
-
-			updateCurrentWave(waveLen, freqVal)
-		}
+		mouseInputFunc(e);
 	}
 
 	//KNOB INPUTS
 
 	// WAVE LENGTH
-	$(function() {
-		$("#dial-wave").knob({
-			'step': '.2',
-			'width': KNOB_WIDTH,
-			'height': KNOB_HEIGHT,
-			"inputColor": "000000",
-			'thickness': KNOB_THICKNESS,
-			'change': function(v) {updateCurrentWave(Math.floor(v/100*max_list_len))}
-		});
+	$("#dial-wave").knob({
+		'displayInput': false,
+		'step': '.2',
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_THICKNESS,
+		'change': function(v) {
+			updateCurrentLength(v/100)
+			x_function = updateCurrentLength
+			y_function = updateCurrentFrequency
+			updateKnobs(); // required since it may modify frequency
+		}
 	});
 
 	// FREQUENCY
-	$(function() {
-		$("#dial-frequency").knob({
-			'width': KNOB_WIDTH,
-			'height': KNOB_HEIGHT,
-			"inputColor": "000000",
-			'thickness': KNOB_THICKNESS,
-			'change': function(v) {
-				if (current_chn instanceof Wave) {
-					wl = current_chn.wave_list.length
-				} else {
-					wl = current_chn.wave.wave_list.length
-				}
-				
-				freqVal = Math.floor(v/100*wl)
-				updateCurrentWave(null, freqVal)
-			}
-		});
+	$("#dial-frequency").knob({
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_THICKNESS,
+		'change': function(v) {
+			updateCurrentFrequency(v/100)
+			x_function = updateCurrentLength
+			y_function = updateCurrentFrequency
+		}
 	});
 
 	// MOD AMT
-	$(function() {
-		$("#dial-mod-phase").knob({
-			'width': KNOB_WIDTH,
-			'height': KNOB_HEIGHT,
-			"inputColor": "000000",
-			'thickness': KNOB_THICKNESS,
-			'change': function(v) {current_chn.phase_mod_amt=v}
-		});
+	$("#dial-mod-phase").knob({
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_THICKNESS,
+		'change': function(v) {
+			updateCurrentModAmt(v/100)
+			x_function = updateCurrentModAmt
+			y_function = updateCurrentWeight
+		}
 	});
 
 	// CHANNEL WEIGHT
-	$(function() {
-		$("#dial-weight").knob({
-			'width': KNOB_WIDTH,
-			'height': KNOB_HEIGHT,
-			"inputColor": "000000",
-			'thickness': KNOB_THICKNESS,
-			'change': function(v) {current_chn.weight=v/100}
-		});
+	$("#dial-weight").knob({
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_THICKNESS,
+		'change': function(v) {
+			updateCurrentWeight(v/100)
+			x_function = updateCurrentModAmt
+			y_function = updateCurrentWeight
+		}
 	});
 
+	//SELECT WHAT TO EDIT
+	knob_select = $("#dial-select").knob({
+		'cursor': 10,
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_CHOICE_THICKNESS,
+		'change': function(v) {
+			updateCurrentChannel(v/100);
+			x_function = updateCurrentChannel
+			y_function = updateCurrentShape
+		},
+		'draw': function() {
+			this.g.textAlign="center";
+			this.g.textBaseline="middle";
+			this.g.font = "bold 20px Arial";
+			this.g.fillText(current_chn.label.toUpperCase(), KNOB_WIDTH/2, KNOB_HEIGHT/2)
+		}
+	});
+
+	//CHANNEL SHAPE
+	$("#dial-shape").knob({
+		'cursor': 10,
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_CHOICE_THICKNESS,
+		'change': function(v) {
+			updateCurrentShape(v/100);
+			x_function = updateCurrentChannel
+			y_function = updateCurrentShape
+		},
+		'draw': function() {
+			this.g.textAlign="center";
+			this.g.textBaseline="middle";
+			this.g.font = "bold 20px Arial";
+			if (current_chn instanceof Wave) {
+				f = current_chn.wave_function.name
+			} else {
+				f = current_chn.wave.wave_function.name
+			}
+			this.g.fillText(f.toUpperCase(), KNOB_WIDTH/2, KNOB_HEIGHT/2)
+		}
+	});
+
+	
+	//MOD SOURCE
+	knob_md_src = $("#dial-md-src").knob({
+		'cursor': 10,
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_CHOICE_THICKNESS,
+		'change': function(v) {
+			updateCurrentModSrc(v/100);
+			x_function = updateCurrentModSrc
+			y_function = updateCurrentModDest
+		},
+		'draw': function() {
+			if (current_chn instanceof Channel) {
+				this.g.textAlign="center";
+				this.g.textBaseline="middle";
+				this.g.font = "bold 20px Arial";
+				this.g.fillText(current_chn.mod.label.toUpperCase(), KNOB_WIDTH/2, KNOB_HEIGHT/2)
+			}
+		}
+	});
+
+	//MOD DESTINATION
+	$("#dial-md-dest").knob({
+		'cursor': 10,
+		'displayInput': false,
+		'width': KNOB_WIDTH,
+		'height': KNOB_HEIGHT,
+		"inputColor": "000000",
+		'thickness': KNOB_CHOICE_THICKNESS,
+		'change': function(v) {
+			updateCurrentModDest(v/100);
+			x_function = updateCurrentModSrc
+			y_function = updateCurrentModDest
+		},
+		'draw': function() {
+			if (current_chn instanceof Channel) {
+				this.g.textAlign="center";
+				this.g.textBaseline="middle";
+				this.g.font = "bold 20px Arial";
+				this.g.fillText(current_chn.mod_dest.toUpperCase(), KNOB_WIDTH/2, KNOB_HEIGHT/2)
+			}
+		}
+	});
 
 	//SETUP SYNTHS
-	isMobile = window.mobilecheck()
+	isMobile = true;//window.mobilecheck()
 	if (!isMobile) {
 		red_syn = new Tone.Oscillator(440, "square12").toMaster().start();
 		grn_syn = new Tone.Oscillator(440, "sine12").toMaster().start();
@@ -485,9 +705,11 @@ function initialize() {
 	}
 
 	// Set everything properly at first
-	updateKnobs()
 
+	updateKnobs();
 }
+
+window.onload = initialize;
 
 function updateKnobs() {
 	if (current_chn instanceof Wave) {
@@ -495,14 +717,18 @@ function updateKnobs() {
 	} else  {
 		wav = current_chn.wave
 	}
-	console.log(wave_name_map[current_chn.label]['color'])
-	
+
 	$('.dial').trigger(
 		'configure',
 		{
 			"fgColor": wave_name_map[current_chn.label]['color']
 		}
 	);
+
+	c_idx = chn_list.findIndex(x => x.label==current_chn.label)
+	$("#dial-select").val(c_idx * (100/chn_list.length)).trigger('change');
+	shp_idx = wave_funcs.findIndex(x => x == wav.wave_function)
+	$("#dial-shape").val(shp_idx * (100/wave_funcs.length)).trigger('change');
 	$("#dial-wave").val(wav.wave_list.length * 100 / max_list_len).trigger('change')
 	$("#dial-frequency").val(wav.frequency * 100 / wav.wave_list.length).trigger('change')
 	
@@ -510,15 +736,21 @@ function updateKnobs() {
 	// get mod source and destination
 	if (current_chn instanceof Channel) {
 		// Update mod knobs
-		$("#dial-mp-container").css('visibility', 'visible');
-		$("#dial-weight-container").css('visibility', 'visible');
+		$(".chn-only-container").css('visibility', 'visible');
 		$("#dial-mod-phase").val(current_chn.phase_mod_amt).trigger('change')
 		$("#dial-weight").val(current_chn.weight * 100).trigger('change')
 
+		s_idx = chn_list.findIndex(x => x.label==current_chn.mod.label)
+		$("#dial-md-src").val(s_idx * (100/chn_list.length)).trigger('change');
+		d_idx = mod_dests.findIndex(x => x==current_chn.mod_dest)
+		$("#dial-md-dest").val(d_idx * (100/mod_dests.length)).trigger('change');
+
+
+
+		/*
 		// Update the mod selector
 		modSrcSelect.val(current_chn.mod.label)
 		modSrcSelect.prop( "disabled", false );
-		//$("#modSourceSelect option:contains('" + current_chn.label + "')").attr("disabled","disabled");//.attr('disabled', 'disabled')//removeAttr('disabled');
 		$("#modSourceSelect option").each(function() {
 			if ($(this)[0].innerText == current_chn.label) {
 				$(this).attr("disabled", "disabled")
@@ -528,16 +760,18 @@ function updateKnobs() {
 		})
 		modDestSelect.val(current_chn.mod_dest)
 		modDestSelect.prop( "disabled", false );
+		*/
 	} else {
 		// Update mod knobs
-		$("#dial-mp-container").css('visibility', 'hidden');
-		$("#dial-weight-container").css('visibility', 'hidden');
+		$(".chn-only-container").css('visibility', 'hidden');
 
+		/*
 		// Update mod selector
 		modSrcSelect.val("None")
 		modSrcSelect.prop( "disabled", true );
 		modDestSelect.val("None")
 		modDestSelect.prop( "disabled", true );
+		*/
 	}
 
 	//Update button colors
@@ -569,23 +803,6 @@ function posToPercent(position) {
 function negPosInt(x) {
 	//takes the range from 0 through 1 and maps it to -1 through 1
 	return (x-0.5)/0.5
-}
-
-
-function updateCurrentWave(waveLen, freqVal) {
-	if (current_chn instanceof Wave) {
-		w = current_chn
-	} else {
-		w = current_chn.wave
-	}
-	if (waveLen && waveLen != w.wave_list.length) {
-		w.wave_list = w.wave_function(waveLen)
-	}
-
-	//FIXME: decide what to do with freq (don't always wanna pass it maybe)
-	if (freqVal && freqVal != w.frequency) {
-		w.frequency = freqVal
-	}
 }
 
 function colorMap(color_string) {

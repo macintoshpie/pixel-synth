@@ -22,7 +22,6 @@
         factory(jQuery);
     }
 }(function ($) {
-
     /**
      * Kontrol library
      */
@@ -308,9 +307,10 @@
 
             s.clear();
 
-            s.dH && (d = s.dH());
-
+            
             d !== false && s.draw();
+            
+            s.dH && (d = s.dH());
         };
 
         this._touch = function (e) {
