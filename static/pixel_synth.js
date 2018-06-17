@@ -110,6 +110,7 @@ var green_weight = 0
 var blue_weight = 0
 
 var mouseIsDown = false;
+var sc_mouse_down = false;
 
 var MAX_RGB_VAL = 255;
 var KNOB_THICKNESS = 1;
@@ -169,6 +170,7 @@ var updateCurrentChannel = function(chnIdxPct) {
 	select_idx = Math.floor(chnIdxPct * chn_list.length);
 	current_chn = chn_list[select_idx];
 	updateKnobs();
+	drawShapeCanvas();
 }
 
 var updateCurrentShape = function(waveIdxPct) {
@@ -184,6 +186,7 @@ var updateCurrentShape = function(waveIdxPct) {
 		l = w.wave_list.length;
 		w.wave_list = w.wave_function(l);
 	}
+	drawShapeCanvas();
 }
 
 var updateCurrentLength = function(lenPct) {
@@ -198,6 +201,7 @@ var updateCurrentLength = function(lenPct) {
 		w.wave_list = w.wave_function(newLen)
 	}
 	updateCurrentFrequency(orig_freq_pct)
+	drawShapeCanvas();
 }
 
 var updateCurrentFrequency = function(freqPct) {
@@ -255,8 +259,8 @@ var mouseInputFunc = function(e) {
 	if (mouseIsDown) {
 		//NOTE: may want to use the change in position rather than
 		// absolute position in the future...
-		x_pct = posToPercent(e.clientX - canvasX);
-		y_pct = posToPercent(e.clientY - canvasY);
+		x_pct = posToPercent(e.clientX - canvasX, disp_width);
+		y_pct = posToPercent(e.clientY - canvasY, disp_width);
 
 		if (shift_x & e.shiftKey) {
 			x_function(x_pct)
@@ -526,8 +530,8 @@ var initialize = function() {
 	myCanvas.addEventListener('touchmove', function(e) {
 		event.preventDefault();
 		var touch = event.touches[0]
-		wavePct = posToPercent(touch.clientX - canvasX)
-		freqPct = posToPercent(touch.clientY - canvasY)
+		wavePct = posToPercent(touch.clientX - canvasX, disp_width)
+		freqPct = posToPercent(touch.clientY - canvasY, disp_width)
 
 		waveLen = Math.floor(max_list_len * wavePct)
 		freqVal = Math.floor(freqPct * waveLen)
@@ -540,6 +544,48 @@ var initialize = function() {
 	}
 	myCanvas.onmousemove = function(e) {
 		mouseInputFunc(e);
+	}
+
+	//setup shape canvas
+	shapeCanvas = $('#shapeCanvas')[0];
+	shapeCanvas.width = disp_width;
+	shapeCanvas.height = 300;
+	s_ctx = shapeCanvas.getContext("2d");
+	sCanvasX = shapeCanvas.getBoundingClientRect().left
+	sCanvasY = shapeCanvas.getBoundingClientRect().top
+
+	shapeCanvas.onmousedown = function(e) {
+		sc_mouse_down = true;
+	}
+	shapeCanvas.onmouseup = function(e) {
+		sc_mouse_down = false;
+	}
+	shapeCanvas.onmousemove = function(e) {
+		if (sc_mouse_down) {
+			// get mouse x position
+			x_pct = posToPercent(e.clientX - sCanvasX, shapeCanvas.width);
+			y_pct = posToPercent(e.clientY - sCanvasY, shapeCanvas.height);
+
+			// flip y_pct because we are drawing the graph upside down
+			y_pct = 1-y_pct;
+			//console.log(y_pct)
+			// map x position to index in current wave
+			if (current_chn instanceof Wave) {
+				w = current_chn
+			} else {
+				w = current_chn.wave
+			}
+			edit_idx = Math.floor(w.wave_list.length * x_pct);
+			console.log(edit_idx)
+			// update the wave
+			w.wave_list[edit_idx] = y_pct;
+			// TODO: update the wave function... needs some setting like custom
+			// redraw the wave list
+			drawShapeCanvas();
+		}
+	}
+	shapeCanvas.onmouseout = function(e) {
+		sc_mouse_down = false;
 	}
 
 	//KNOB INPUTS
@@ -791,13 +837,14 @@ function myMod(n, m) {
 	return ((n % m) + m) % m;
 }
 
-function posToPercent(position) {
-	if (position > disp_width) {
+function posToPercent(position, length) {
+	console.log(position, length)
+	if (position > length) {
 		return 1
 	} else if (position < 0) {
 		return 0
 	}
-	return position / disp_width
+	return position / length
 }
 
 function negPosInt(x) {
@@ -929,6 +976,23 @@ function draw() {
 	// ctx.putImageData(imgData, data_width, data_height)
 }
 
+function drawShapeCanvas() {
+	if (current_chn instanceof Wave) {
+		w = current_chn
+	} else {
+		w = current_chn.wave
+	}
+	s_ctx.clearRect(0, 0, shapeCanvas.width, shapeCanvas.height);
+	bar_width = shapeCanvas.width / w.wave_list.length;
+	console.log(bar_width)
+	for (var i=0; i<w.wave_list.length; i++) {
+		height = w.wave_list[i] * shapeCanvas.height;
+		y = shapeCanvas.height - height;
+		s_ctx.fillStyle=wave_name_map[current_chn.label]['color'];
+		s_ctx.fillRect(i*bar_width, y, bar_width, height);
+	}
+}
+
 function saw(length) {
 	var temp_array = new Array(length);
 	increment = 1/length
@@ -982,6 +1046,21 @@ function rand(length) {
 		r.push(Math.random());
 	}
 	return r;
+}
+
+function interp(a, length) {
+	if (a.length >= length) {
+		return;
+	}
+	n_insertions = length - a.length;
+	insert_space = a.length / n_insertions
+	for (var i=0; i<n_insertions; i++) {
+		idx = Math.floor(i*insert_space + ((i-1) * insert_space))
+		console.log("idx", idx)
+		val = (a[idx] + a[idx-1]) / 2
+		console.log("val ", val);
+		a.splice(idx, 0, val);
+	}
 }
 
 setInterval(draw, 60); //need to decide drawing frequency
