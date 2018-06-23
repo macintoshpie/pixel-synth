@@ -121,9 +121,9 @@ var KNOB_HEIGHT = KNOB_WIDTH
 
 var mod_1 = new Wave("mod 1", saw(10), 1)
 var mod_2 = new Wave("mod 2", saw(5), 1)
-var red_chn = new Channel("red", new Wave("red", triangle(294), 293), 1)
-var grn_chn = new Channel("green", new Wave("green", triangle(200), 10), 1)
-var blu_chn = new Channel("blue", new Wave("blue", saw(30), 1), 0)
+var red_chn = new Channel("red", new Wave("red", triangle(29), 1), 1)
+var grn_chn = new Channel("green", new Wave("green", saw(10), 1), 1)
+var blu_chn = new Channel("blue", new Wave("blue", square(20), 19), 1)
 
 
 var current_chn = red_chn;
