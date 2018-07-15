@@ -340,7 +340,7 @@ function Channel(color_str, wave, weight) {
 		}
 		else {
 			rd = recursion_depth + 1
-			m = this.mod.getVal(i, false, rd);
+			m = this.mod.getVal(index, false, rd);
 		}
 		return m;
 	}
@@ -396,16 +396,16 @@ var initialize = function() {
 	KNOB_WIDTH = Math.floor(window_height / 4) - 4 * KNOB_PADDING;
 	KNOB_HEIGHT = KNOB_WIDTH;
 
-	myCanvas.width = disp_width;
-	myCanvas.height = disp_height;
+	myCanvas.width = data_width // disp_width;
+	myCanvas.height = data_height // disp_height;
 	display_scale = Math.floor(disp_width / data_width)
-	ctx = myCanvas.getContext("2d");
+	ctx = myCanvas.getContext("2d", { alpha: false });
 	
 	imgData = ctx.createImageData(data_width, data_height);
 	displayImage = ctx.createImageData(data_width*display_scale, data_height*display_scale)
 	//imgData2 = ctx.createImageData(data_width, data_height);
 	for (var i=0; i<imgData.data.length; i+=4) {
-		imgData.data[i] = 0;
+		imgData.data[i] = 255;
 		imgData.data[i+1] = 0;
 		imgData.data[i+2] = 0;
 		imgData.data[i+3] = 255;
@@ -423,9 +423,9 @@ var initialize = function() {
 		displayImage.data[i+3] = 255;
 	}
 
-	//ctx.putImageData(imgData, 0, 0);
+	ctx.putImageData(imgData, 0, 0);
 	//ctx.putImageData(imgData2, 0, 0);
-	ctx.putImageData(displayImage, 0, 0);
+	//ctx.putImageData(displayImage, 0, 0);
 
 	/*
 	//Add inputs
@@ -753,6 +753,17 @@ var initialize = function() {
 	// Set everything properly at first
 
 	updateKnobs();
+
+
+	// TESTING SCALING
+	var scaleX = 10
+	var scaleY = 10
+
+	var scaleToFit = Math.min(scaleX, scaleY);
+	var scaleToCover = Math.max(scaleX, scaleY);
+
+	myCanvas.style.transformOrigin = '0 0'; //scale from top left
+	myCanvas.style.transform = 'scale(' + scaleToFit + ')';
 }
 
 window.onload = initialize;
@@ -876,34 +887,38 @@ function flattenArray(an_array) {
 }
 
 function updateImage() {
-	for (var i=0; i<data_width*data_height; i++) {//*red_list.length) {	//jump at intervals as long as the my_list array
+	for (var i=0; i<imgData.data.length; i++) {//*red_list.length) {	//jump at intervals as long as the my_list array
 		//console.log(i)
 		
-
 		basic_unit = [
 			red_chn.getVal(i, true, 0) * MAX_RGB_VAL,
 			grn_chn.getVal(i, true, 0) * MAX_RGB_VAL,
 			blu_chn.getVal(i, true, 0) * MAX_RGB_VAL,
 			MAX_RGB_VAL
 		]
+		imgData.data[i*4] = basic_unit[0]
+		imgData.data[i*4+1] = basic_unit[1]
+		imgData.data[i*4+2] = basic_unit[2]
+		imgData.data[i*4+3] = MAX_RGB_VAL
 
-		var disp_arr = []
-		for (var display_i=0; display_i<display_scale; display_i++){
-			disp_arr = disp_arr.concat(basic_unit)
-		}
+		// TODO: Don't scale like this, use CSS as per mozilla's recommendation
+		// var disp_arr = []
+		// for (var display_i=0; display_i<display_scale; display_i++){
+		// 	disp_arr = disp_arr.concat(basic_unit)
+		// }
 
-		// Get the upper left cell for the displayimage
-		display_row_start = (i * Math.pow(display_scale, 2) - ((i % data_width) * display_scale * (display_scale - 1)))
+		// // Get the upper left cell for the displayimage
+		// display_row_start = (i * Math.pow(display_scale, 2) - ((i % data_width) * display_scale * (display_scale - 1)))
 		//console.log("index: ", i, "->", display_row_start)
 
-		for (var display_i=0; display_i<display_scale; display_i++) {
-			insert_index = (display_row_start + (displayImage.width * display_i))
-			//console.log("col: ", i, " row:", display_i, "->", insert_index)
-			insert_index = insert_index * 4
-			displayImage.data.set(disp_arr, insert_index);
+		// for (var display_i=0; display_i<display_scale; display_i++) {
+		// 	insert_index = (display_row_start + (displayImage.width * display_i))
+		// 	//console.log("col: ", i, " row:", display_i, "->", insert_index)
+		// 	insert_index = insert_index * 4
+		// 	displayImage.data.set(disp_arr, insert_index);
 
-			//console.log(insert_index)
-		}
+		// 	//console.log(insert_index)
+		// }
 		
 		//displayImage.data.set(display_unit, img_idx*display_scale);
 		//displayImage.data.set(display_unit, (img_idx+data_width)*display_scale)
@@ -914,34 +929,34 @@ function updateImage() {
 		// imgData.data[img_idx+2] = blue_list[i%blue_list.length] * blue_weight
 	}
 
-	if (!isMobile){
-		updateSynths(i)
-	}
+	// if (!isMobile){
+	// 	updateSynths(i)
+	// }
 
 	//TODO: these shifts should be determined by the list length
 	// specifically, what would be the next value after writing the last (bottom right) pixel?
 	// ie. the red_list.length % data_width*data_height
 	// Decide which version I like better....
-	new_red = red_list.splice(0, red_freq)//((data_width*data_height) % red_list.length));
-	red_list = red_list.concat(new_red);
-	new_green = green_list.splice(0, (data_width*data_height) % green_list.length);
-	green_list = green_list.concat(new_green);
-	new_blue = blue_list.splice(0, (data_width*data_height) % blue_list.length);
-	blue_list = blue_list.concat(new_blue);
-	// new_green = green_list.splice(0, green_freq);
+	// new_red = red_list.splice(0, red_freq)//((data_width*data_height) % red_list.length));
+	// red_list = red_list.concat(new_red);
+	// new_green = green_list.splice(0, (data_width*data_height) % green_list.length);
 	// green_list = green_list.concat(new_green);
-	// new_blue = blue_list.splice(0, blue_freq);
+	// new_blue = blue_list.splice(0, (data_width*data_height) % blue_list.length);
 	// blue_list = blue_list.concat(new_blue);
+	// // new_green = green_list.splice(0, green_freq);
+	// // green_list = green_list.concat(new_green);
+	// // new_blue = blue_list.splice(0, blue_freq);
+	// // blue_list = blue_list.concat(new_blue);
 
-	new_mod = mod_list.splice(mod_freq);
-	mod_list = mod_list.concat(new_mod);
+	// new_mod = mod_list.splice(mod_freq);
+	// mod_list = mod_list.concat(new_mod);
 
-	new_red_mod = red_mod.splice(mod_freq)
-	red_mod = red_mod.concat(new_red_mod)
-	new_blue_mod = blue_mod.splice(mod_freq)
-	blue_mod = blue_mod.concat(new_blue_mod)
-	new_green_mod = green_mod.splice(mod_freq)
-	green_mod = green_mod.concat(new_green_mod)
+	// new_red_mod = red_mod.splice(mod_freq)
+	// red_mod = red_mod.concat(new_red_mod)
+	// new_blue_mod = blue_mod.splice(mod_freq)
+	// blue_mod = blue_mod.concat(new_blue_mod)
+	// new_green_mod = green_mod.splice(mod_freq)
+	// green_mod = green_mod.concat(new_green_mod)
 
 	//NEW STUFF
 	red_chn.stepAll(i)
@@ -966,14 +981,29 @@ function updateSynths(i) {
 	blu_syn.volume.value = blu_chn.weight * 100 - 100
 }
 
-function draw() {
-	updateImage();
+var total_counting = 0;
+var update_total = 0;
+var put_total = 0;
+var update_avg = 0;
+var put_avg = 0;
 
-	ctx.putImageData(displayImage, 0, 0)
+function draw() {
+	total_counting += 1;
+	// time update
+	start_update = performance.now();
+	updateImage();
+	update_total += performance.now() - start_update;
+
+	start_put = performance.now();
+	// ctx.putImageData(displayImage, 0, 0)
+	ctx.putImageData(imgData, 0, 0)
+	put_total += performance.now() - start_put;
 	//ctx.putImageData(imgData, 0, 0);
 	// ctx.putImageData(imgData2, data_width, 0)
 	// ctx.putImageData(imgData2, 0, data_height)
 	// ctx.putImageData(imgData, data_width, data_height)
+	update_avg = update_total / total_counting;
+	put_avg = put_total / total_counting;
 }
 
 function drawShapeCanvas() {
@@ -1062,5 +1092,6 @@ function interp(a, length) {
 		a.splice(idx, 0, val);
 	}
 }
+
 
 setInterval(draw, 60); //need to decide drawing frequency
