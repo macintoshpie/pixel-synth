@@ -1,188 +1,126 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<head>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-	<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
-	<script type="text/javascript" src="../static/bower_components/jquery/dist/jquery.min.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
+		<script type="text/javascript" src="../static/bower_components/jquery/dist/jquery.min.js"></script>
 
-	<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery-knob/js/jquery.knob.js') }}"></script>
-	<script type="text/javascript" src="../static/bower_components/jquery-knob/js/jquery.knob.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='bower_components/jquery-knob/js/jquery.knob.js') }}"></script>
+		<script type="text/javascript" src="../static/bower_components/jquery-knob/js/jquery.knob.js"></script>
 
-	<script type="text/javascript" src="{{ url_for('static', filename='Tone.min.js') }}"></script>
-	<script type="text/javascript" src="../static/Tone.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		<style>
+			canvas {
+			image-rendering: -moz-crisp-edges;    /* Firefox */
+			image-rendering: -webkit-crisp-edges; /* Webkit (Safari) */
+			image-rendering: pixelated;           /* Chrome */
+			}
+			.test_stype {
+				padding-top: 1px;
+			}
+			.vertical-align {
+				display: flex;
+				align-items: center;
+			}
+			.dial-row {
+				border: 3px solid black;
+				padding: 4px;
+			}
+			.btn:focus, .btn:active:focus, .btn.active:focus{
+				outline:none;
+				box-shadow:none;
+			}
+			#rb.active {
+				background-color: #FF0000;
+			}
+			#gb.active {
+				background-color: #00FF00;
+			}
+			#bb.active {
+				background-color: #0000FF;
+			}
+			#m1btn.active, #m2btn.active {
+				background-color: #8b8b8b;
+			}
+			.knob-container * {
+				float: none;
+				display: inline;
+			}
 
+			.knob-container {
+				margin: auto;
+			}
 
-	<style>
-canvas {
-  image-rendering: -moz-crisp-edges;    /* Firefox */
-  image-rendering: -webkit-crisp-edges; /* Webkit (Safari) */
-  image-rendering: pixelated;           /* Chrome */
-}
-	
-	.vertical-align {
-    display: flex;
-    align-items: center;
-}
-		.dial-row {
-			border: 3px solid black;
-			padding: 4px;
-		}
-
-		.btn:focus, .btn:active:focus, .btn.active:focus{
-			outline:none;
-			box-shadow:none;
-		}
-
-		#rb.active {
-			background-color: #FF0000;
-		}
-
-		#gb.active {
-			background-color: #00FF00;
-		}
-
-		#bb.active {
-			background-color: #0000FF;
-		}
-
-		#m1btn.active, #m2btn.active {
-			background-color: #8b8b8b;
-		}
-
-		/*input {
-			visibility:hidden;
-		}*/
-
-		.knob-container * {
-			float: none;
-			display: inline;
-		}
-
-		.knob-container {
-			margin: auto;
-		}
-
-	</style>
-	
-</head>
-<body>
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-md-6 col-sm-12">
-				<div class="row">
-					<div class="col-12">
-						<canvas class="test_stype" id="myCanvas"></canvas>
-					</div>
-				</div>	
-
-			<script type="text/javascript" src="{{ url_for('static', filename='pixel_synth.js') }}"></script>
-			<script type="text/javascript" src="../static/pixel_synth.js"></script>
-
-			</div>
-			<div class="col-md-6 col-sm-12">
-				<div class="row dial-row">
-					<canvas id="shapeCanvas"></canvas>
-					<div class="col-6" id="dial-select-container">
-						<input type="text" class="dial" id="dial-select">
-						select edit
-					</div>
-					<div class="col-6" id="">	
-						<input type="text" class="dial" id="dial-shape">
-						shape
-					</div>
-				</div>
-				<div class="row dial-row">
-					<div class="col-6">
-						<input type="text" class="dial" id="dial-wave">
-						length
-					</div>
-					<div class="col-6">
-						<input type="text" class="dial" id="dial-frequency">
-						frequency
-					</div>
-				</div>
-				<div class="row chn-only-container dial-row">
-					<div class="col-6" id="dial-mp-container">
-						<input type="text" class="dial" id="dial-mod-phase">
-						mod amt
-					</div>
-					<div class="col-6" id="dial-weight-container">
-						<input type="text" class="dial" id="dial-weight">
-						weight
-					</div>
-				</div>
-				<div class="row chn-only-container dial-row">
-					<div class="col-6" id="">
-						<input type="text" class="dial" id="dial-md-src">
-						mod src
-					</div>
-					<div class="col-6" id="">
-						<input type="text" class="dial" id="dial-md-dest">
-						mod dest
-					</div>
-				</div>
-				<!--
-				<div class="row">
-					<div class="col-6">
-						Wave Shape
-						<select id="waveSelect">
-							<option>saw</option>
-							<option>triangle</option>
-							<option>square</option>
-							<option>rand</option>
-						</select>
-					</div>
-					<div class="col-6">
-						<div class="row">
-							Mod Source
-							<select id="modSourceSelect">
-								<option>red</option>
-								<option>green</option>
-								<option>blue</option>
-								<option>mod 1</option>
-								<option>mod 2</option>
-							</select>
+		</style>
+		
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6 col-sm-12">
+					<div class="row">
+						<div class="col-md-12">
+								<h4>Pixel Synthesizer</h4>
+								<p>This is a <i>very</i> rough prototype... be sure to visit later! Try clicking/dragging around on the knobs to the right, or click/drag around on the video display below, or checkout one of the demos!</p>
+								<button onclick="demoSimple()">demo simple</button>
+								<button onclick="demoEgg()">demo eggs</button>
+								<button onclick="demoParallax()">demo parallax</button>
+								<br>
+								<canvas class="test_stype" id="myCanvas"></canvas>
 						</div>
-						<div class="row">
-							Mod Destination
-							<select id="modDestinationSelect">
-								<option>phase</option>
-								<option>frequency</option>
-								<option>weight</option>
-							</select>
+					</div>	
+
+				<script type="text/javascript" src="{{ url_for('static', filename='pixel_synth.js') }}"></script>
+				<script type="text/javascript" src="../static/pixel_synth.js"></script>
+
+				</div>
+				<div class="col-md-6 col-sm-12">
+					<div class="row dial-row">
+						<canvas id="shapeCanvas"></canvas>
+						<div class="col-6" id="dial-select-container">
+							<input type="text" class="dial" id="dial-select">
+							select edit
+						</div>
+						<div class="col-6" id="">	
+							<input type="text" class="dial" id="dial-shape">
+							shape
+						</div>
+					</div>
+					<div class="row dial-row">
+						<div class="col-6">
+							<input type="text" class="dial" id="dial-wave">
+							length
+						</div>
+						<div class="col-6">
+							<input type="text" class="dial" id="dial-frequency">
+							frequency
+						</div>
+					</div>
+					<div class="row chn-only-container dial-row">
+						<div class="col-6" id="dial-mp-container">
+							<input type="text" class="dial" id="dial-mod-phase">
+							mod amt
+						</div>
+						<div class="col-6" id="dial-weight-container">
+							<input type="text" class="dial" id="dial-weight">
+							weight
+						</div>
+					</div>
+					<div class="row chn-only-container dial-row">
+						<div class="col-6" id="">
+							<input type="text" class="dial" id="dial-md-src">
+							mod src
+						</div>
+						<div class="col-6" id="">
+							<input type="text" class="dial" id="dial-md-dest">
+							mod dest
 						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="btn-group btn-group-sm btn-group-justified" role="group" data-toggle="buttons">
-						<div class="btn-group-justified">
-							<label id="rb" class="btn btn-secondary btn-block">
-								<input type="radio">RED</button>
-							</label>
-							<label id="gb" class="btn btn-secondary btn-block">
-								<input type="radio">GREEN</button>
-							</label>
-							<label id="bb" class="btn btn-secondary btn-block">
-								<input type="radio">BLUE</button>
-							</label>	
-						</div>
-						<div class="btn-group-justified">
-							<label id="m1btn" class="btn btn-secondary btn-block">
-								<input type="radio">Mod 1</button>
-							</label>
-							<label id="m2btn" class="btn btn-secondary btn-block">
-								<input type="radio">Mod 2</button>
-							</label>
-						</div>
-					</div>
-				</div>
-			-->
 			</div>
 		</div>
-	</div>
-</body>
+	</body>
 </html>
