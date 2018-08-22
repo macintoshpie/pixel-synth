@@ -335,6 +335,9 @@ function Channel(color_str, wave, weight) {
 	this.mod_dest = "phase"
 
 	this.getMod = function(index, recursion_depth) {
+		// T(n) = O(1) if recursion_depth > MAX_RECURSION
+		// T(n) = O(1) if recursion_depth <= MAX_RECURSION && Mod is a simple wave
+		// T(n) = O(V(n)) if recursion_depth <= MAX_RECURSION && Mod is another channel who's time is V(n) to get val
 		if (recursion_depth > MAX_RECURSION) {
 			m = 0; // NOT applying any mod since we've recursed to the max
 		}
@@ -349,11 +352,13 @@ function Channel(color_str, wave, weight) {
 	this.getVal = function(index, with_weight, recursion_depth) {
 		i = index;
 
-		if (this.mod_dest == "phase") {
+		// if Wave mod: O(1)
+		// if Channel mod: O(M(n)) where M(n) is time for mod to get val
+		if (this.mod_dest == "phase" && this.phase_mod_amt !== 0) {
 			m = Math.floor(negPosInt(this.getMod(i, recursion_depth)) * this.phase_mod_amt)
 			w = this.wave.getVal(i + m, false)
 		}
-		else if (this.mod_dest == "weight") {
+		else if (this.mod_dest == "weight" && this.phase_mod_amt !== 0) {
 			m = this.getMod(index, recursion_depth) * this.phase_mod_amt
 			w = this.wave.getVal(i, false) * m
 		}
