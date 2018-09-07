@@ -1,31 +1,11 @@
-# Pentaku JS
-This is a small game I made to learn some basic javascript and HTML canvas. I intentionally chose to create it using only vanilla javascript in order to master the fundamentals. The name Pentaku came from merging the names of two of the games you can play with this app, [Pentago](https://en.wikipedia.org/wiki/Pentago) and [Gomoku](https://en.wikipedia.org/wiki/Gomoku).
+# Pixel Synth
+A very rough prototype for a simple web-based video synthesizer - there is much to be optimized with performance. Everything is currently located in a single javascript file, `static/pixel_synth.js`.There are 3 primary channels, red, green and blue, each which are given a wave function for generating a 2d array (e.g. a triangle wave). These channels are then drawn from top left to bottom right each frame, before their waves are "shifted" and they are drawn all over again. They can also receive modulation from other channels, creating interesting feedback loops.
 
-### [Demo here](http://pentaku.herokuapp.com)
+### [Demo here](http://pix-synth.herokuapp.com)
+[interesting GIFs from synth](https://twitter.com/macint0shpie/status/1005293877761335296)
 
-#### Game basics:
-1. Place player piece on empty space of board
-2. (Optional, if rotation enabled) Choose a quadrant and rotate it 90 degrees clockwise or couterclockwise
-3. Win by getting enough of your player pieces in a horizontal, vertical, or diagonal line  
-
-The app includes a GUI that allows the user edit parameters of the game:
-
-| board attribute  | description |
-| ------------- | ------------- |
-| rotate radius  | if zero, no rotation is used in the game. Otherwise, this determines the size of the rotation grids |
-| columns  | number of columns and rows (allows only values compatible with the rotate radius parameter)  |
-| winning length  | number of player pieces in a row required to win the game  |
-| players  | number of players  |
-| player name, type, color  | attributes of the player. Ok bot is an ok bot, random bot is random...  |
-
-### What I learned making this app
-- Javascript events
-- Javascript DOM
-- Javascript OOP basics
-- Canvas basics
-- How to build a simple Flask app
-
-### Future plans
-- make a better bot
-- optimize some of the functions
-- add online matchmaking
+## General Plan:
+1. Create basic functioning, interactive synthesizer :rocket:
+2. Characterize function performance and optimize :construction:
+3. Refactor code for better organization ...
+4. Overhaul UI ...
