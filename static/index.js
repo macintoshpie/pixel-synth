@@ -48,10 +48,11 @@ function main() {
         domParent: monitorContainer
     };
     const synthOptions = {
-        dataLength: dataWidth * dataWidth
+        dataLength: dataWidth * dataWidth,
+        dataWidth: dataWidth,
     }
     const controlsOptions = {
-        domParent: controlsContainer
+        domParent: controlsContainer,
     }
     const pixSynth = setup(synthOptions, monitorOptions, controlsOptions);
     createInterval(update, pixSynth, DRAW_INTERVAL)

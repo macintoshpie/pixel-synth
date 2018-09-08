@@ -1,7 +1,7 @@
 'use strict';
 
 import { Channel } from './channel.js'
-import { Wave } from './wave.js'
+import { Wave, WaveTable } from './wave.js'
 import { triangleTable, sawTable, squareTable } from './generators.js'
 
 const MAX_RGB_VAL = 255;
@@ -19,15 +19,24 @@ export class Synth {
      * @param {channel} options.modB - mod channel B
      * @param {monitor} options.monitor - reference to Monitor type
      */
-    constructor({ redChn, grnChn, bluChn, modA, modB, monitor }) {
+    constructor({ redChn, grnChn, bluChn, modA, modB, monitor, dataWidth }) {
+        this.waveTablesMap = {
+            'triangle': WaveTable({ label: 'triangle', tableArray: triangleTable }),
+            'saw': WaveTable({ label: 'saw', tableArray: sawTable }),
+            'square': WaveTable({ label: 'square', tableArray: squareTable }),
+        }
+
+        console.log('dawg', this.waveTablesMap)
+
         this.modA = modA || new Channel({
             label: 'modAChannel',
             wave: new Wave({
                 label: 'modAWave',
-                waveTable: triangleTable,
+                waveTable: this.waveTablesMap.triangle,
                 waveLength: 100,
                 frequency: 1,
-                rotated: false
+                rotated: false,
+                dataWidth: dataWidth
             }),
             simple: true,
         });
@@ -36,10 +45,11 @@ export class Synth {
             label: 'modBChannel',
             wave: new Wave({
                 label: 'modBWave',
-                waveTable: triangleTable,
+                waveTable: this.waveTablesMap.triangle,
                 waveLength: 100,
                 frequency: 1,
-                rotated: false
+                rotated: false,
+                dataWidth: dataWidth
             }),
             simple: true,
         });
@@ -48,10 +58,11 @@ export class Synth {
             label: 'redChannel',
             wave: new Wave({
                 label: 'redWave',
-                waveTable: triangleTable,
+                waveTable: this.waveTablesMap.triangle,
                 waveLength: 60,
                 frequency: 59,
-                rotated: false
+                rotated: true,
+                dataWidth: dataWidth
             }),
             simple: false,
             weight: 1,
@@ -64,10 +75,11 @@ export class Synth {
             label: 'greenChannel',
             wave: new Wave({
                 label: 'greenWave',
-                waveTable: triangleTable,
+                waveTable: this.waveTablesMap.triangle,
                 waveLength: 70,
                 frequency: 1,
-                rotated: false
+                rotated: false,
+                dataWidth: dataWidth
             }),
             simple: false,
             weight: 1,
@@ -80,10 +92,11 @@ export class Synth {
             label: 'blueChannel',
             wave: new Wave({
                 label: 'blueWave',
-                waveTable: triangleTable,
+                waveTable: this.waveTablesMap.triangle,
                 waveLength: 80,
                 frequency: 1,
-                rotated: false
+                rotated: false,
+                dataWidth: dataWidth
             }),
             simple: false,
             weight: 1,
@@ -146,6 +159,7 @@ export class Synth {
         this.setModDest = this.setModDest.bind(this);
         this.setWeight = this.setWeight.bind(this);
         this.getChannelsMap = this.getChannelsMap.bind(this);
+        this.toggleRotated = this.toggleRotated.bind(this);
     }
 
     /**
@@ -218,10 +232,10 @@ export class Synth {
 
     /**
      * Set the wavetable for active channel's wave
-     * @param {number[]} waveTable 
+     * @param {string} waveTableLabel
      */
-    setTable(waveTable) {
-        this.activeEdit.wave.setTable(waveTable);
+    setTable(waveTableLabel) {
+        this.activeEdit.wave.setTable(this.waveTablesMap[waveTableLabel]);
     }
 
     /**
@@ -274,5 +288,9 @@ export class Synth {
 
     getChannelsMap() {
         return this.channelsMap;
+    }
+
+    toggleRotated() {
+        this.activeEdit.wave.toggleRotated();
     }
 }

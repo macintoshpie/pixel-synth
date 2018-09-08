@@ -2,13 +2,26 @@
 
 import { mapVal } from './utility.js'
 
+export function WaveTable({ label, tableArray }) {
+    // verify that length is 2^n + 1
+    const l = tableArray.length - 1
+    if (!(l && !(l & (l - 1)))) {
+        throw Error('Table length must be 2^n + 1');
+    }
+    return {
+        label: label,
+        tableLength: tableArray.length - 2, // -1 base 0, -1 b/c leaving extra index for interpolation
+        table: tableArray,
+    }
+}
+
 /** Class for wave objects */
 export class Wave {
     /**
      * Create a Wave
      * @param {Object} options - Instance values
      * @param {string} options.label - Name of wave
-     * @param {Array} options.waveTable - Wavetable for sampling values from (note, assumed waveTable.length == 2^n + 1)
+     * @param {Object} options.waveTable - Wavetable for sampling values from (note, assumed waveTable length == 2^n + 1)
      * @param {number} options.waveLength - Number of samples in a period
      * @param {number} options.frequency - Percent of waveLength to shift after each rendering
      * @param {boolean} options.rotated - If true, rotates rendering 90 degrees
@@ -17,23 +30,26 @@ export class Wave {
     constructor({ label, waveTable, waveLength, frequency, rotated, dataWidth, tZ }) {
         this.label = label;
         this.waveTable = waveTable;
-        this.tableLength = waveTable.length - 2; // extra -1 b/c treating waveTable length as 2^n
         this.frequency = mapVal(frequency, 0, 1, 0, waveLength);
         this.waveLength = waveLength;
         this.rotated = rotated;
         this.dataWidth = dataWidth;
 
         // Tracks the stepping interval per sample
-        this.stepSize = this.tableLength / this.waveLength;
+        this.stepSize = 0;
+        this.updateStepSize();
         // Tracks the starting position within the array at the beginning of a rendering (ie cell 0,0)
         this.tZ = tZ || 0;
+    }
+
+    updateStepSize() {
+        this.stepSize = this.waveTable.tableLength / this.waveLength;
     }
 
     getState() {
         return {
             label: this.label,
             waveTable: this.waveTable,
-            tableLength: this.tableLength,
             frequency: this.frequency,
             waveLength: this.waveLength,
             roated: this.rotated,
@@ -44,8 +60,9 @@ export class Wave {
 
     getStateSimple() {
         return {
+            waveTable: { label: this.waveTable.label },
             frequency: Math.round(mapVal(this.frequency, 0, this.waveLength, 0, 100)),
-            waveLength: mapVal(this.waveLength, 0, this.tableLength, 0, 100),
+            waveLength: mapVal(this.waveLength, 0, this.waveTable.tableLength, 0, 100),
             roated: this.rotated,
         }
     }
@@ -55,7 +72,7 @@ export class Wave {
      * @param {number} stepMod - a positive or negative value to shift the step
      */
 	step(stepMod = 0) {
-		this.tZ = (this.tZ + (this.frequency * this.stepSize) + stepMod) & (this.tableLength - 1)
+		this.tZ = (this.tZ + (this.frequency * this.stepSize) + stepMod) & (this.waveTable.tableLength - 1)
     }
     
     /**
@@ -65,10 +82,10 @@ export class Wave {
     interp(idx) {
         let integral = Math.floor(idx);
         let fractional = idx - integral;
-        let valLower = this.waveTable[integral];
-        let valUpper = this.waveTable[integral + 1];
+        let valLower = this.waveTable.table[integral];
+        let valUpper = this.waveTable.table[integral + 1];
         let myVal =  valLower + ((valUpper - valLower) * fractional);
-        if (integral + 1 > this.waveTable.length - 1) {
+        if (integral > this.waveTable.tableLength) {
             throw Error('OOBBBBB')
         }
         return myVal;
@@ -84,20 +101,26 @@ export class Wave {
 			let col = tD % this.dataWidth;
 			tD = col * this.dataWidth + (this.dataWidth - row)
 		}
-		let getIdx = (this.tZ + (tD * this.stepSize)) & (this.tableLength - 1);
+		let getIdx = (this.tZ + (tD * this.stepSize)) & (this.waveTable.tableLength - 1);
 		return this.interp(getIdx)
     }
     
     setLength(pct) {
-        this.waveLength = this.tableLength * pct;
-        this.stepSize = this.tableLength / this.waveLength;
+        this.waveLength = this.waveTable.tableLength * pct;
+        this.stepSize = this.waveTable.tableLength / this.waveLength;
     }
 
     setTable(waveTable) {
         this.waveTable = waveTable;
+        this.updateStepSize();
     }
 
     setFrequency(pct) {
         this.frequency = Math.round(pct * this.waveLength);
+    }
+
+    toggleRotated() {
+        this.rotated = !this.rotated;
+        console.log(this.rotated);
     }
 }
