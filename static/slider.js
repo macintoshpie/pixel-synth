@@ -43,7 +43,7 @@ export class Slider extends React.Component {
                     type: 'range',
                     step: 0.05,
                     style: {
-                        width: '300px',
+                        width: '100%',
                     },
                     onChange: this.handleChange,
                     value: this.props.value,

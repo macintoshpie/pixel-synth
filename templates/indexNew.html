@@ -1,9 +1,18 @@
 <html>
   <head>
     <style>
+      .synth-container {
+        vertical-align: center;
+        width: 50%;
+        float: left;
+      }
+      @media only screen and (max-width: 600px) {
+        .synth-container {
+          width: 100%;
+        }
+      }
       #monitor-container {
-        width: 500px;
-        height: 500px;
+        height: 100%;
       }
       .mySelected {
         background-color: cornflowerblue;
@@ -11,14 +20,48 @@
       .notSelected {
         background-color: none;
       }
+
+      .item-a {
+        grid-area: header;
+      }
+      .item-b {
+        grid-area: main;
+      }
+      .item-c {
+        grid-area: sidebar;
+      }
+      .item-d {
+        grid-area: footer;
+      }
+
+      .container {
+        grid-template-columns: 50px 50px 50px 50px;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          "header header header header"
+          "main main . sidebar"
+          "footer footer footer footer";
+      }
+
+      .selector-currentEdit {
+	      display: flex;
+        justify-content: space-around;
+      }
+
+      .selector-waveTable {
+        display: flex;
+        flex-direction: column;
+      }
     </style>
     <script type="module" src="{{ url_for('static', filename='index.js') }}"></script>
     <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
   </head>
   <body>
-    <div id="monitor-container"></div>
-    <div id="controls-container"></div>
+    <div class="container">
+      <div class="synth-container"><div id="monitor-container"></div></div>
+      <div class="synth-container"><div id="controls-container"></div></div>
+    </div>
   </body>
   <script type="module" src="{{ url_for('static', filename='controller.js') }}"></script>
 </html>

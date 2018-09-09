@@ -25,11 +25,13 @@ export class Selector extends React.Component {
         if (this.props.editingSimple && this.props.hideOnSimple) {
             return null;
         }
-        return [
-            this.props.label,
+        return e(
+            'div',
+            {
+                className: this.props.className
+            },
             this.props.valOptions.map((option, i) => {
                 const myClass = option.label == this.props.value ? 'mySelected' : 'notSelected'
-                console.log(option);
                 return e(
                     'input',
                     {
@@ -44,6 +46,6 @@ export class Selector extends React.Component {
                     },
                 );
             })
-        ]
+        )
     }
 }
