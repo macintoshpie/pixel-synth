@@ -12,11 +12,9 @@ export class Selector extends React.Component {
     }
 
     handleChange(event) {
-        console.log('my val', event.target.value)
         // this.setState({ value: event.target.value });
         this.props.setFunc(event.target.value);
         if (this.props.onUpdate) {
-            console.log()
             this.props.onUpdate()
         }
     }
@@ -25,27 +23,30 @@ export class Selector extends React.Component {
         if (this.props.editingSimple && this.props.hideOnSimple) {
             return null;
         }
-        return e(
-            'div',
-            {
-                className: this.props.className
-            },
-            this.props.valOptions.map((option, i) => {
-                const myClass = option.label == this.props.value ? 'mySelected' : 'notSelected'
-                return e(
-                    'input',
-                    {
-                        type: 'button',
-                        value: option.label,
-                        className: myClass,
-                        id: option.label,
-                        name: this.props.name,
-                        key: option.label,
-                        onClick: this.handleChange,
-                        onUpdate: this.props.onUpdate,
-                    },
-                );
-            })
-        )
+        return [
+            this.props.label,
+            e(
+                'div',
+                {
+                    className: this.props.className
+                },
+                this.props.valOptions.map((option, i) => {
+                    const myClass = option.label == this.props.value ? 'mySelected' : 'notSelected'
+                    return e(
+                        'input',
+                        {
+                            type: 'button',
+                            value: option.label,
+                            className: myClass,
+                            id: option.label,
+                            name: this.props.name,
+                            key: option.label,
+                            onClick: this.handleChange,
+                            onUpdate: this.props.onUpdate,
+                        },
+                    );
+                })
+            )
+        ]
     }
 }

@@ -36,18 +36,20 @@ export class Slider extends React.Component {
             return null;
         }
         return [
+            // e('br'),
             this.props.label,
-            e(
-                'input',
-                {
-                    type: 'range',
-                    step: 0.05,
-                    style: {
-                        width: '100%',
-                    },
-                    onChange: this.handleChange,
-                    value: this.props.value,
-                }
+            // e('br'),
+            e('div', {className: 'slider-container'},
+                e(
+                    'input',
+                    {
+                        type: 'range',
+                        step: 0.05,
+                        onChange: this.handleChange,
+                        value: this.props.value,
+                        className: 'slider',
+                    }
+                )
             )
         ]
     }
