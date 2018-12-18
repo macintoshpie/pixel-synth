@@ -5,6 +5,33 @@ import { Selector } from './selector.js'
 
 const e = React.createElement;
 
+function basicPath(pathString) {
+    return e(
+        'path',
+        {
+            d:pathString, stroke:"black", 'strokeWidth':"1", fill: "none"
+        }
+    )
+}
+
+function basicSvg(id, pathString) {
+    return e(
+        'svg',
+        {
+            id: id,
+            viewBox: "-40 0 100 10",
+            className: "svgShape"
+        },
+        basicPath(pathString)
+    )
+}
+
+const shapeLabelMap = {
+    'triangle': basicSvg('triangle', "M 0 5 2.5 2.5 7.5 7.5 10 5"),
+    'saw': basicSvg('saw', "M 0 5 0 1 10 9 10 5"),
+    'square': basicSvg('square', "M 0 5 0 1 5 1 5 9 10 9 10 5")
+}
+
 export class Controller extends React.Component {
     constructor(props) {
         super(props);
@@ -18,6 +45,7 @@ export class Controller extends React.Component {
     }
 
     render() {
+
         return [
             e(Selector, {
                 label: 'current channel',
@@ -30,14 +58,14 @@ export class Controller extends React.Component {
             }),
             e('div', {className: 'wave-inputs'},
                 e('div', {className: 'wave-shape'},
-                    'Shape',
                     e(Selector, {
                         label: 'wave shape',
                         value: this.state.wave.waveTable.label,
                         className: 'selector-waveTable',
                         valOptions: Object.values(this.synth.waveTablesMap),
                         setFunc: this.synth.setTable,
-                        onUpdate: this.onUpdate.bind(this)
+                        onUpdate: this.onUpdate.bind(this),
+                        labelMap: shapeLabelMap,
                     }),
                     e(Selector, {
                         label: 'toggle rotated',
@@ -100,7 +128,7 @@ export class Controller extends React.Component {
                         onUpdate: this.onUpdate.bind(this),
                         editingSimple: this.state.simple,
                         hideOnSimple: true
-                    })
+                    }),
                 ),
             ),
         ] 

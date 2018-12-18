@@ -12,8 +12,11 @@ export class Selector extends React.Component {
     }
 
     handleChange(event) {
-        // this.setState({ value: event.target.value });
-        this.props.setFunc(event.target.value);
+        let setVal = event.target.id
+        if (event.target.nodeName == 'path') {
+            setVal = event.target.parentElement.id
+        }
+        this.props.setFunc(setVal);
         if (this.props.onUpdate) {
             this.props.onUpdate()
         }
@@ -33,17 +36,17 @@ export class Selector extends React.Component {
                 this.props.valOptions.map((option, i) => {
                     const myClass = option.label == this.props.value ? 'mySelected' : 'notSelected'
                     return e(
-                        'input',
+                        'div',
                         {
-                            type: 'button',
                             value: option.label,
-                            className: myClass,
+                            className: myClass + ' buttonDiv',
                             id: option.label,
                             name: this.props.name,
                             key: option.label,
                             onClick: this.handleChange,
                             onUpdate: this.props.onUpdate,
                         },
+                        this.props.labelMap ? this.props.labelMap[option.label] : option.label
                     );
                 })
             )
