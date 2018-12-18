@@ -7,5 +7,5 @@ A very rough prototype for a simple web-based video synthesizer - there is much 
 ## General Plan:
 1. Create basic functioning, interactive synthesizer :rocket:
 2. Characterize function performance and optimize :rocket:
-3. Refactor code for better organization :construction:
+3. Refactor code for better organization :rocket:
 4. Overhaul UI :construction:
