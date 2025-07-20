@@ -1,16 +1,16 @@
 image: alpine/edge
 oauth: pages.sr.ht/PAGES:RW
 packages:
-- hut
+  - hut
 environment:
   repo: pixel-synth
   domain: synth.tedsummer.com
 tasks:
-- publish:
-    # can replace -C ${repo} with the directory containing your files.
-    # can replace "." to determine where to save the tar file
-    tar -cvzf "site.tar.gz" -C ${repo}/static .
-    # can use gemini protocol with `-p GEMINI`
-    hut pages publish -d ${domain} -p HTTPS site.tar.gz
-    # publish to subdomains too (just follow instructions for setting the CNAME record in docs)
-    # hut pages publish -d www.${domain} -p HTTPS site.tar.gz
+  - upload: |
+      # can replace -C ${repo} with the directory containing your files.
+      # can replace "." to determine where to save the tar file
+      tar -cvzf "site.tar.gz" -C ${repo}/static .
+      # can use gemini protocol with `-p GEMINI`
+      hut pages publish -d ${domain} -p HTTPS site.tar.gz
+      # publish to subdomains too (just follow instructions for setting the CNAME record in docs)
+      # hut pages publish -d www.${domain} -p HTTPS site.tar.gz
