@@ -6,7 +6,7 @@ environment:
   repo: pixel-synth
   domain: synth.tedsummer.com
 tasks:
-- publish: 
+- publish:
     # can replace -C ${repo} with the directory containing your files.
     # can replace "." to determine where to save the tar file
     tar -cvzf "site.tar.gz" -C ${repo}/static .
